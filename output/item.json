@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "item_name": "アイテム１",
+    "item_name": "アイテム1",
     "quantity": 100,
     "special": 1.0
   },
@@ -44,7 +44,7 @@
   {
     "id": 8,
     "item_name": "アイテム8",
-    "quantity": 50,
+    "quantity": 1,
     "special": 2.0
   },
   {
@@ -67,7 +67,7 @@
   },
   {
     "id": 12,
-    "item_name": "hoge",
+    "item_name": "アイテム12",
     "quantity": 10,
     "special": 2.0
   }

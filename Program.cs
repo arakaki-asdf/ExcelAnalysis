@@ -1,4 +1,5 @@
-﻿
+﻿// エントリーポイント 
+
 var dir = Directory.GetCurrentDirectory();
 var data_path = Path.Combine(dir, "data");
 var toml_path = Path.Combine(data_path, "item.toml");

@@ -1,5 +1,5 @@
 # パラメータ開始位置
-start_row = 2
+start_param = 2
 
 # id
 [[params]]

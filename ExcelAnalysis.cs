@@ -2,22 +2,35 @@ using ExcelDataReader;
 using Nett;
 using Newtonsoft.Json;
 using System.Text;
-using System.Linq;
 
+/// <summary>
+/// Excel解析
+/// tomlファイルでの定義した内容と合っているかチェック
+/// json出力
+/// </summary>
 class ExcelAnalysis
 {
-    // 実行用関数
-    public void Run(string toml_path, string excel_path, string output_path)
+    /// <summary>
+    /// excel読み込み～json出力まで全て行う
+    /// </summary>
+    /// <param name="toml_path">tomlファイルパス</param>
+    /// <param name="excel_path">excelファイルパス</param>
+    /// <param name="output_path">出力ディレクトリ</param>
+    public void Run(string toml_path, string excel_path, string output_dir)
     {
         var toml = LoadToml(toml_path);
-        toml.Validate();
         Logger.CheckWarningAndError();
 
         var sheet_name = Path.GetFileNameWithoutExtension(toml_path);
         var cells = LoadExcel(excel_path, sheet_name);
         Logger.CheckWarningAndError();
-        var excel = new ExcelData(Path.GetFileName(excel_path), cells!, toml.StartRow);
+        if (toml!.StartParam - 1 >= cells!.Length)
+        {
+            Logger.AddError($"start_row: {toml.StartParam} 開始位置がセルの範囲を超えています。");
+            Logger.CheckWarningAndError();
+        }
 
+        var excel = new ExcelData(Path.GetFileName(excel_path), cells!, toml.StartParam);
         CheckParameters(toml, excel);
         Logger.CheckWarningAndError();
 
@@ -30,13 +43,27 @@ class ExcelAnalysis
         CheckRange(toml, excel);
         Logger.CheckWarningAndError();
 
-        var list = ExcelToList(toml, excel);
+        // json出力する前にwarningがある場合、終了
+        if (Logger.WarningCount > 0)
+        {
+            Logger.AddError("############ エラー終了 ############");
+            Logger.CheckWarningAndError();
+        }
+
+        var list = ExcelDataToList(toml, excel);
         var file_name = Path.GetFileNameWithoutExtension(toml_path);
-        var json_path = Path.Combine(output_path, $"{file_name}.json");
+        var json_path = Path.Combine(output_dir, $"{file_name}.json");
         OutputJson(json_path, list);
+        Console.WriteLine("############ 成功 ############");
     }
 
-    List<Dictionary<string, object>> ExcelToList(TomlData toml, ExcelData excel)
+    /// <summary>
+    /// エクセルデータからjson用リストに変換
+    /// </summary>
+    /// <param name="toml"></param>
+    /// <param name="excel"></param>
+    /// <returns></returns>
+    List<Dictionary<string, object>> ExcelDataToList(TomlData toml, ExcelData excel)
     {
         var cells = excel.Cells;
         var list = new List<Dictionary<string, object>>();
@@ -57,6 +84,12 @@ class ExcelAnalysis
         return list;
     }
 
+    /// <summary>
+    /// typeに応じて型変換
+    /// </summary>
+    /// <param name="type">型</param>
+    /// <param name="cell">cellの値</param>
+    /// <returns></returns>
     object GetValue(string type, string cell)
     {
         switch (type)
@@ -64,58 +97,59 @@ class ExcelAnalysis
             case "string": return cell;
             case "int":
             {
-                if (!int.TryParse(cell, out int result))
-                {
-                    Logger.AddError($"{cell} {type}型に変換できません");
-                    return 0;
-                }
+                int.TryParse(cell, out int result);
                 return result;
             }
 
             case "float":
             {
-                if (!float.TryParse(cell, out float result))
-                {
-                    Logger.AddError($"{cell} {type}型に変換できません");
-                    return 0;
-                }
+                float.TryParse(cell, out float result);
                 return result;
             }
         }
 
-        Logger.AddError($"Type: {type} {cell} 変換できません");
         return "";
     }
 
-    // List<Dictionary<string, object>>からJson変換
-    void OutputJson(string path, List<Dictionary<string, object>> dic, bool is_fomrat = true)
+    /// <summary>
+    /// jsonファイル出力
+    /// </summary>
+    /// <param name="path">出力パス</param>
+    /// <param name="dic">json用リスト</param>
+    /// <param name="is_fomrat">フォーマットするかどうか</param>
+    void OutputJson(string path, List<Dictionary<string, object>> list, bool is_fomrat = true)
     {
         var format = is_fomrat ? Formatting.Indented : Formatting.None;
-        var json_string = JsonConvert.SerializeObject(dic, format);
+        var json_string = JsonConvert.SerializeObject(list, format);
         File.WriteAllText(path, json_string);
     }
 
-    // Tomlで定義されているパラメータがExcel内にあるか確認
+    /// <summary>
+    /// tomlのparams.nameで定義されているパラメータがexcel内にあるか確認
+    /// </summary>
     void CheckParameters(TomlData toml, ExcelData excel)
     {
-        var toml_names = new HashSet<string>(toml.Params.Select(x => x.Name).ToArray());
+        var toml_names = new HashSet<string>(toml.Params.Select(x => x.Name));
         var excel_names = new HashSet<string>(excel.Keys);
-        toml_names.SymmetricExceptWith(excel_names);
+        toml_names.ExceptWith(excel_names);
 
         if (toml_names.Count > 0)
         {
             var names = string.Join(", ", toml_names.Select(x => x));
-            Logger.AddError($"tomlとexcelでパラメータが一致しません。names : {names}");
+            Logger.AddError($"{excel.Name}@{toml.Name} [{names}] パラメータが一致しません。start_rowが間違っている可能性があります。");
         }
     }
 
-    // 型チェック
+    /// <summary>
+    /// 指定した型に変換できるかチェック
+    /// </summary>
     void CheckType(TomlData toml, ExcelData excel)
     {
-        foreach (var param in toml.Params)
+        for (var i = 0; i < toml.Params.Length; ++i)
         {
+            var param = toml.Params[i];
             var columns = excel[param.Name];
-            for (var i = 0; i < columns.Length; ++i)
+            for (var k = 0; k < columns.Length; ++k)
             {
                 switch (param.Type)
                 {
@@ -123,18 +157,16 @@ class ExcelAnalysis
                         break;
 
                     case "int":
-                        if (!int.TryParse(columns[i], out int _))
+                        if (!int.TryParse(columns[k], out int _))
                         {
-                            var column_index = toml.StartRow + 1 + (i + 1);
-                            Logger.AddError($"CheckType(): {param.Name}列の{column_index}行目 {param.Type}型に変換できません。");
+                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{param.Type}型に変換できません"));
                         }
                         break;
                     
                     case "float":
-                        if (!float.TryParse(columns[i], out float _))
+                        if (!float.TryParse(columns[k], out float _))
                         {
-                            var column_index = toml.StartRow + 1 + (i + 1);
-                            Logger.AddError($"CheckType(): {param.Name}列の{column_index}行目 {param.Type}型に変換できません。");
+                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{param.Type}型に変換できません"));
                         }
                         break;
                 }
@@ -142,43 +174,60 @@ class ExcelAnalysis
         }
     }
 
-    void ToExcelPosition(TomlData toml, int row, int col)
+    /// <summary>
+    // 必要な情報「エクセルファイル名@シート名: セル番号 文言」を返す便利関数
+    /// </summary>
+    /// <param name="toml">tomlデータ</param>
+    /// <param name="excel">excelデータ</param>
+    /// <param name="row">行</param>
+    /// <param name="col">列</param>
+    /// <param name="text">文言</param>
+    /// <returns></returns>
+    string ToDetailText(TomlData toml, ExcelData excel, int row, int col, string text)
     {
-        // toml.StartRow + 1 
+        var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var sheet_name = Path.GetFileNameWithoutExtension(toml.Name);
+        // パラメータの次なのでStartRow + 1
+        return $"{excel.Name}@{sheet_name}: [{alphabet[row]}{toml.StartParam + 1 + col}] {text}";
     }
 
-    // ユニーク値チェック
+    /// <summary>
+    /// ユニーク値チェック
+    /// </summary>
     void CheckUnique(TomlData toml, ExcelData excel)
     {
-        var unique_params = toml.Params
-            .Where(x => x.IsUnique)
-            .ToArray();
-        foreach (var param in unique_params)
+        for (var i = 0; i < toml.Params.Length; ++i)
         {
+            var param = toml.Params[i];
+            if (!param.IsUnique) continue;
+
             var cells = excel[param.Name];
             var hash = new HashSet<string>();
-            foreach(var cell in cells)
+            for (var k = 0; k < cells.Length; ++k)
             {
+                var cell = cells[k];
                 if (!hash.Add(cell))
                 {
-                    Logger.AddError($"CheckValidate() {param.Name}:{cell} ユニークな値が重複しています。");
+                    Logger.AddWarning(ToDetailText(toml, excel, i, k, "ユニークな値が重複しています"));
                 }
             }
         }
     }
 
-    // 範囲チェック
+    /// <summary>
+    /// 範囲チェック
+    /// </summary>
     void CheckRange(TomlData toml, ExcelData excel)
     {
-        var range_params = toml.Params
-            .Where(x => x.IntRange != default || x.FloatRange != default)
-            .ToArray();
-
-        foreach (var param in range_params)
+        for (var i = 0; i < toml.Params.Length; ++i)
         {
+            var param = toml.Params[i];
+            if (param.IntRange == default && param.FloatRange == default) continue;
+
             var cells = excel[param.Name];
-            foreach (var cell in cells)
+            for (var k = 0; k < cells.Length; ++k)
             {
+                var cell = cells[k];
                 switch (param.Type)
                 {
                     case "int":
@@ -187,13 +236,12 @@ class ExcelAnalysis
                         var max = param.IntRange.max;
                         if (!int.TryParse(cell, out int result))
                         {
-                            Logger.AddWarning($"{param.Name} {cell}をint型に変換できないです");
                             continue;
                         }
                         var is_range = min <= result && result <= max;
                         if (!is_range)
                         {
-                            Logger.AddWarning($"{param.Name} {cell} 値が範囲外です");
+                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{min} <= {result} <= {max} 値が範囲外です"));
                             continue;
                         }
 
@@ -206,13 +254,12 @@ class ExcelAnalysis
                         var max = param.FloatRange.max;
                         if (!float.TryParse(cell, out float result))
                         {
-                            Logger.AddWarning($"{param.Name} {cell}をfloat型に変換できないです");
                             continue;
                         }
                         var is_range = min <= result && result <= max;
                         if (!is_range)
                         {
-                            Logger.AddWarning($"{param.Name} {cell} 値が範囲外です");
+                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{min} <= {result} <= {max} 値が範囲外です"));
                             continue;
                         }
 
@@ -223,7 +270,12 @@ class ExcelAnalysis
         }
     }
 
-    // excel読み込み
+    /// <summary>
+    /// excel読み込み (今のところシート１つのみ)
+    /// </summary>
+    /// <param name="path">ファイルパス</param>
+    /// <param name="sheet_name">シート名</param>
+    /// <returns></returns>
     string[][]? LoadExcel(string path, string sheet_name)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -261,16 +313,27 @@ class ExcelAnalysis
         }
     }
 
-    // toml読み込み
-    TomlData LoadToml(string path)
+    /// <summary>
+    /// toml読み込み
+    /// </summary>
+    /// <param name="path">ファイルパス</param>
+    /// <returns></returns>
+    TomlData? LoadToml(string path)
     {
         if (!File.Exists(path))
         {
             Logger.AddError($"{path} : 存在しないファイルです");
-            Logger.CheckWarningAndError();
+            return null;
         }
-        var toml = Toml.ReadFile(path);
-        return new TomlData(toml);
+        try
+        {
+            var toml = Toml.ReadFile(path);
+            return new TomlData(Path.GetFileName(path), toml);
+        }
+        catch (Exception e)
+        {
+            Logger.AddError($"{path}: [toml構文エラー] {e.Message}");
+            return null;
+        }
     }
-
 }
