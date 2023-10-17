@@ -5,7 +5,6 @@ start_param = 2
 [[params]]
 name = "id"
 type = "int"
-unique = true # ユニーク値
 
 # アイテム名
 [[params]]
@@ -16,14 +15,8 @@ type = "string"
 [[params]]
 name = "quantity"
 type = "int"
-[params.range] # 値の範囲
-min = 1
-max = 100
 
 # 特別報酬倍率
 [[params]]
 name = "special"
 type = "float"
-[params.range]
-min = 1.0
-max = 2.0

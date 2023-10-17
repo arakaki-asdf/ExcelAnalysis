@@ -42,7 +42,7 @@
     "special": 1.2
   },
   {
-    "id": 8,
+    "id": 4,
     "item_name": "アイテム8",
     "quantity": 1,
     "special": 2.0
@@ -54,7 +54,7 @@
     "special": 1.0
   },
   {
-    "id": 10,
+    "id": 4,
     "item_name": "アイテム10",
     "quantity": 70,
     "special": 1.0
@@ -62,8 +62,8 @@
   {
     "id": 11,
     "item_name": "アイテム11",
-    "quantity": 80,
-    "special": 1.2
+    "quantity": 1,
+    "special": 1.0
   },
   {
     "id": 12,

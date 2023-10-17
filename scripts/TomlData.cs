@@ -17,8 +17,6 @@ class TomlParam
     { 
         "name",
         "type",
-        "unique",
-        "range"
     };
     /// <summary>
     /// typeで定義可能な型
@@ -38,18 +36,6 @@ class TomlParam
     /// 型
     /// </summary>
     public string Type { get; private set; }
-    /// <summary>
-    /// 値がユニークかどうか
-    /// </summary>
-    public bool IsUnique { get; private set; }
-    /// <summary>
-    /// 値の範囲 (int)
-    /// </summary>
-    public (int min, int max) IntRange { get; private set; } = default;
-    /// <summary>
-    /// 値の範囲 (float)
-    /// </summary>
-    public (float min, float max) FloatRange { get; private set; } = default;
 
     /// <summary>
     /// コンストラクタ
@@ -79,86 +65,10 @@ class TomlParam
             }
         }
 
-        IsUnique = hash.Contains("unique") ? parameters.Get<bool>("unique") : false;
-
-        if (hash.Contains("range"))
-        {
-            var range = parameters["range"].Get<TomlTable>();
-            CheckRange(toml_path, range);
-        }
-
         hash.ExceptWith(Keywords);
         foreach (var key in hash)
         {
             Logger.AddError($"{toml_path} {key}: 不要なパラメータです");
-        }
-    }
-    
-    /// <summary>
-    /// 範囲チェック
-    /// </summary>
-    /// <param name="path">tomlファイルのパス</param>
-    /// <param name="range">tomlデータ</param>
-    void CheckRange(string toml_path, TomlTable range)
-    {
-        if (range == null)
-        {
-            Logger.AddError($"{toml_path} range: [param.range]の書き方が間違っている可能性があります");
-            return;
-        }
-
-        var keyExist = new[] { "min", "max" }.All(x => range.Keys.Any(key => x == key));
-        if (!keyExist)
-        {
-            Logger.AddError($"{toml_path} [param.range]: min, maxを定義してください");
-            return;
-        }
-
-        switch (Type)
-        {
-            case "float":
-            {
-                var toml_min = range["min"];
-                var min = toml_min.TomlType switch
-                {
-                    TomlObjectType.Int => toml_min.Get<int>(),
-                    TomlObjectType.Float => toml_min.Get<float>(),
-                    _ => default
-                };
-
-                var toml_max = range["max"];
-                var max = toml_max.TomlType switch
-                {
-                    TomlObjectType.Int => toml_max.Get<int>(),
-                    TomlObjectType.Float => toml_max.Get<float>(),
-                    _ => default
-                };
-
-                var t1 = min.ToString();
-                var t2 = max.ToString();
-                if (max.ToString("G7") == min.ToString("G7"))
-                {
-                    Logger.AddError($"{toml_path} range: min, maxが同じ値です");
-                }
-                FloatRange = (min, max);
-            }
-            break;
-
-            case "int":
-            {
-                var min = range["min"].Get<int>();
-                var max = range["max"].Get<int>();
-                if (min == max)
-                {
-                    Logger.AddError($"{toml_path} range: min, maxが同じ値です");
-                }
-                IntRange = (min, max);
-            }
-            break;
-
-            default:
-                Logger.AddError($"{toml_path} float, int型以外でrangeは使えません");
-                break;
         }
     }
 }

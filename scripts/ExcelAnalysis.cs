@@ -37,12 +37,6 @@ class ExcelAnalysis
         CheckType(toml, excel);
         Logger.CheckWarningAndError();
 
-        CheckUnique(toml, excel);
-        Logger.CheckWarningAndError();
-
-        CheckRange(toml, excel);
-        Logger.CheckWarningAndError();
-
         // json出力する前にwarningがある場合、終了
         if (Logger.WarningCount > 0)
         {
@@ -189,85 +183,6 @@ class ExcelAnalysis
         var sheet_name = Path.GetFileNameWithoutExtension(toml.Name);
         // パラメータの次なのでStartRow + 1
         return $"{excel.Name}@{sheet_name}: [{alphabet[row]}{toml.StartParam + 1 + col}] {text}";
-    }
-
-    /// <summary>
-    /// ユニーク値チェック
-    /// </summary>
-    void CheckUnique(TomlData toml, ExcelData excel)
-    {
-        for (var i = 0; i < toml.Params.Length; ++i)
-        {
-            var param = toml.Params[i];
-            if (!param.IsUnique) continue;
-
-            var cells = excel[param.Name];
-            var hash = new HashSet<string>();
-            for (var k = 0; k < cells.Length; ++k)
-            {
-                var cell = cells[k];
-                if (!hash.Add(cell))
-                {
-                    Logger.AddWarning(ToDetailText(toml, excel, i, k, "ユニークな値が重複しています"));
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// 範囲チェック
-    /// </summary>
-    void CheckRange(TomlData toml, ExcelData excel)
-    {
-        for (var i = 0; i < toml.Params.Length; ++i)
-        {
-            var param = toml.Params[i];
-            if (param.IntRange == default && param.FloatRange == default) continue;
-
-            var cells = excel[param.Name];
-            for (var k = 0; k < cells.Length; ++k)
-            {
-                var cell = cells[k];
-                switch (param.Type)
-                {
-                    case "int":
-                    {
-                        var min = param.IntRange.min;
-                        var max = param.IntRange.max;
-                        if (!int.TryParse(cell, out int result))
-                        {
-                            continue;
-                        }
-                        var is_range = min <= result && result <= max;
-                        if (!is_range)
-                        {
-                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{min} <= {result} <= {max} 値が範囲外です"));
-                            continue;
-                        }
-
-                        break;
-                    }
-
-                    case "float":
-                    {
-                        var min = param.FloatRange.min;
-                        var max = param.FloatRange.max;
-                        if (!float.TryParse(cell, out float result))
-                        {
-                            continue;
-                        }
-                        var is_range = min <= result && result <= max;
-                        if (!is_range)
-                        {
-                            Logger.AddWarning(ToDetailText(toml, excel, i, k, $"{min} <= {result} <= {max} 値が範囲外です"));
-                            continue;
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>
