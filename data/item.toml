@@ -1,0 +1,29 @@
+# パラメータ開始位置
+start_row = 2
+
+# id
+[[params]]
+name = "id"
+type = "int"
+unique = true # ユニーク値
+
+# アイテム名
+[[params]]
+name = "item_name"
+type = "string"
+
+# 量
+[[params]]
+name = "quantity"
+type = "int"
+[params.range] # 値の範囲
+min = 1
+max = 100
+
+# 特別報酬倍率
+[[params]]
+name = "special"
+type = "float"
+[params.range]
+min = 1.0
+max = 2.0
