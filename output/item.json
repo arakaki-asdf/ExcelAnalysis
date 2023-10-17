@@ -62,7 +62,7 @@
   {
     "id": 11,
     "item_name": "アイテム11",
-    "quantity": 1,
+    "quantity": 3,
     "special": 1.0
   },
   {
@@ -70,5 +70,11 @@
     "item_name": "アイテム12",
     "quantity": 10,
     "special": 2.0
+  },
+  {
+    "id": 13,
+    "item_name": "",
+    "quantity": 1,
+    "special": 1.0
   }
 ]

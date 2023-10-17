@@ -40,7 +40,7 @@ class ExcelAnalysis
         // json出力する前にwarningがある場合、終了
         if (Logger.WarningCount > 0)
         {
-            Logger.AddError("############ エラー終了 ############");
+            Logger.AddError("### エラー終了 ###");
             Logger.CheckWarningAndError();
         }
 
@@ -48,7 +48,7 @@ class ExcelAnalysis
         var file_name = Path.GetFileNameWithoutExtension(toml_path);
         var json_path = Path.Combine(output_dir, $"{file_name}.json");
         OutputJson(json_path, list);
-        Console.WriteLine("############ 成功 ############");
+        Console.WriteLine("### 成功 ###");
     }
 
     /// <summary>

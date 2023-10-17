@@ -3,7 +3,7 @@
 ### json出力 コマンドラインツール
 Excelにパラメータ行を追加することで、Excelのシート名と同じtomlファイルで定義した内容に合わせて、型チェック、json出力
 
-例) xlsxデータにパラメータに対してtoml定義
+例) xlsxデータのパラメータをtomlファイルで定義
 
 ![](image/excel.png)
 
@@ -34,10 +34,6 @@ type = "float"
 - typeは`string`, `int`, `float`の3つのみ
 
 
-## 制作期間
-3~4日
-
-
 ## 使用技術
 - C#
 - ライブラリ
@@ -47,4 +43,9 @@ type = "float"
     - Newtonsoft.Json (json読み込み)
 
 
+## 実行方法
+※Windowsのみ
 
+1. run.batを実行
+2. outputフォルダにitem.jsonが出力されることを確認
+3. data/sample.xlsxのitemシートの値を変更してrun.batを実行
