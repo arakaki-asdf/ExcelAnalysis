@@ -14,11 +14,11 @@ class ExcelData
     /// <summary>
     /// パラメータ
     /// </summary>
-    public string[] Keys { get; private set; }
+    public string[] Params { get; private set; }
 
     /// <summary>
     /// コンストラクタ
-    /// start_rowは例えば行数がexcelで1だとデータでは0なので、-1している。
+    /// start_rowは例えば行数がexcelで1だとindexは0なので、-1している。
     /// </summary>
     /// <param name="excel_name">エクセルファイル名</param>
     /// <param name="cells">データ</param>
@@ -26,8 +26,17 @@ class ExcelData
     public ExcelData(string excel_name, string[][] cells, int start_row)
     {
         Name = excel_name;
-        Keys = cells[start_row - 1].ToArray();
+        Params = cells[start_row - 1].ToArray();
         Cells = cells.Skip(start_row).ToArray();
+
+        var hash = new HashSet<string>();
+        var duplicates = Params
+            .Where(x => !hash.Add(x))
+            .ToArray();
+        if (duplicates.Length > 0)
+        {
+            Logger.AddError($"{Name} {string.Join(", ", duplicates)} パラメータ名が重複してます。");
+        }
     }
 
     /// <summary>
@@ -40,7 +49,7 @@ class ExcelData
     {
         get
         {
-            var index = Array.FindIndex(Keys, x => x == key);
+            var index = Array.FindIndex(Params, x => x == key);
             if (index == -1) return new string[]{};
             return Cells.Select(x => x[index]).ToArray();
         }

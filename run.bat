@@ -1,5 +1,5 @@
 @echo off
 cd /d %~dp0
 
-%cd%\publish\ExcelAnalysis.exe
+%cd%\publish\ExcelAnalysis.exe sample.xlsx item.toml
 pause

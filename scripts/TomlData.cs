@@ -111,6 +111,7 @@ class TomlData
     {
         Name = name;
         var hash = new HashSet<string>(toml.Keys);
+
         StartParam = hash.Contains("start_param")
             ? Math.Max(toml.Get<int>("start_param"), -1) : -1;
         if (StartParam <= 0)
@@ -138,6 +139,16 @@ class TomlData
         foreach (var key in hash)
         {
             Logger.AddError($"{Name} {key}: 不要なパラメータです");
+        }
+
+        var names_hash = new HashSet<string>();
+        var duplicates = Params
+            .Select(x => x.Name)
+            .Where(x => !names_hash.Add(x))
+            .ToArray();
+        if (duplicates.Length > 0)
+        {
+            Logger.AddError($"{Name} {string.Join(", ", duplicates)} パラメータ名が重複してます。");
         }
     }
 }

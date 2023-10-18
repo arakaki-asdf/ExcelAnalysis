@@ -48,7 +48,7 @@ class ExcelAnalysis
         var file_name = Path.GetFileNameWithoutExtension(toml_path);
         var json_path = Path.Combine(output_dir, $"{file_name}.json");
         OutputJson(json_path, list);
-        Console.WriteLine("### 成功 ###");
+        Console.WriteLine($"### {Path.GetFileName(json_path)} 出力 ###");
     }
 
     /// <summary>
@@ -66,11 +66,11 @@ class ExcelAnalysis
             var dic = new Dictionary<string, object>();
             for (var k = 0; k < cells[i].Length; ++k)
             {
-                var key = excel.Keys[k];
-                var param = toml.Params.FirstOrDefault(x => x.Name == key);
+                var name = excel.Params[k];
+                var param = toml.Params.FirstOrDefault(x => x.Name == name);
                 if (param == null) continue;
                 var value = GetValue(param.Type, cells[i][k]);
-                dic[key] = value;
+                dic[name] = value;
             }
             list.Add(dic);
         }
@@ -124,13 +124,13 @@ class ExcelAnalysis
     void CheckParameters(TomlData toml, ExcelData excel)
     {
         var toml_names = new HashSet<string>(toml.Params.Select(x => x.Name));
-        var excel_names = new HashSet<string>(excel.Keys);
+        var excel_names = new HashSet<string>(excel.Params);
         toml_names.ExceptWith(excel_names);
 
         if (toml_names.Count > 0)
         {
             var names = string.Join(", ", toml_names.Select(x => x));
-            Logger.AddError($"{excel.Name}@{toml.Name} [{names}] パラメータが一致しません。start_rowが間違っている可能性があります。");
+            Logger.AddError($"{excel.Name}@{toml.Name} name = {names} パラメータが一致しません。");
         }
     }
 
@@ -201,30 +201,38 @@ class ExcelAnalysis
             Logger.CheckWarningAndError();
         }
         
-        using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        try
         {
-            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(stream))
+            using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                var dataset = reader.AsDataSet();
-
-                var worksheet = dataset.Tables[sheet_name];
-                if (worksheet is null)
+                using (var reader = ExcelReaderFactory.CreateOpenXmlReader(stream))
                 {
-                    var file = Path.GetFileName(path);
-                    Logger.AddError($"{file}: {sheet_name} 存在しないシート名です");
-                    return null;
-                }
+                    var dataset = reader.AsDataSet();
 
-                var cells = new string[worksheet!.Rows.Count][];
-                foreach (var row in Enumerable.Range(0, worksheet.Rows.Count))
-                {
-                    cells[row] = Enumerable.Range(0, worksheet.Columns.Count)
-                        .Select(col => worksheet.Rows[row][col]?.ToString() ?? "")
-                        .ToArray();
-                }
+                    var worksheet = dataset.Tables[sheet_name];
+                    if (worksheet is null)
+                    {
+                        var file = Path.GetFileName(path);
+                        Logger.AddError($"{file}: {sheet_name} 存在しないシート名です");
+                        return null;
+                    }
 
-                return cells;
+                    var cells = new string[worksheet!.Rows.Count][];
+                    foreach (var row in Enumerable.Range(0, worksheet.Rows.Count))
+                    {
+                        cells[row] = Enumerable.Range(0, worksheet.Columns.Count)
+                            .Select(col => worksheet.Rows[row][col]?.ToString() ?? "")
+                            .ToArray();
+                    }
+
+                    return cells;
+                }
             }
+        }
+        catch (Exception e)
+        {
+            Logger.AddError($"{path}: [excelエラー] {e.Message}");
+            return null;
         }
     }
 

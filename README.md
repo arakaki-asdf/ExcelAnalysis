@@ -1,9 +1,10 @@
 
 ## 機能
-### json出力 コマンドラインツール
-Excelにパラメータ行を追加することで、Excelのシート名と同じtomlファイルで定義した内容に合わせて、型チェック、json出力
+### ExcelからJSON出力 コマンドラインツール
+Excelにパラメータ行を追加し、シート名と同じTOMLファイルを定義してパラメータ毎の型チェックを行い、エラーがなければJSONファイルを出力します。
 
-例) xlsxデータのパラメータをtomlファイルで定義
+
+例) xlsxデータのパラメータをTOMLファイルで定義
 
 ![](image/excel.png)
 
@@ -37,15 +38,14 @@ type = "float"
 ## 使用技術
 - C#
 - ライブラリ
-    - ExcelDataReader (excel読み込み)
-    - ExcelDataReader.DataSet
-    - Nett (toml読み込み)
-    - Newtonsoft.Json (json読み込み)
+    - ExcelDataReader (excel用)
+    - ExcelDataReader.DataSet (excel用)
+    - Nett (toml用)
+    - Newtonsoft.Json (json用)
 
 
 ## 実行方法
 ※Windowsのみ
 
 1. run.batを実行
-2. outputフォルダにitem.jsonが出力されることを確認
-3. data/sample.xlsxのitemシートの値を変更してrun.batを実行
+2. outputフォルダにjsonが出力されることを確認

@@ -1,0 +1,29 @@
+start_param = 1
+
+[[params]]
+name = "entrydate"
+type = "string"
+
+[[params]]
+name = "userid"
+type = "string"
+
+[[params]]
+name = "name"
+type = "string"
+
+[[params]]
+name = "seibetsu"
+type = "string"
+
+[[params]]
+name = "age"
+type = "string"
+
+[[params]]
+name = "birthday"
+type = "string"
+
+[[params]]
+name = "totalmoney"
+type = "int"
