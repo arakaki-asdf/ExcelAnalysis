@@ -51,7 +51,5 @@ type = "float"
 
 1. [excel-analysis-v1.0.0.zip](https://github.com/arakaki-asdf/ExcelAnalysis/releases)をダウンロード&解凍
 2. run.batを実行
-3. outputフォルダにjsonが出力されることを確認
-4. run.batのitem.tomlをitem2.tomlに変更
-5. outputフォルダにjsonが出力されることを確認
+3. outputフォルダにjson出力
 
