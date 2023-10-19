@@ -115,6 +115,11 @@ class ExcelAnalysis
     {
         var format = is_fomrat ? Formatting.Indented : Formatting.None;
         var json_string = JsonConvert.SerializeObject(list, format);
+        var dir = Path.GetDirectoryName(path) ?? string.Empty;
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
         File.WriteAllText(path, json_string);
     }
 
