@@ -45,11 +45,11 @@ type = "float"
 
 
 ## 実行方法
-https://github.com/arakaki-asdf/ExcelAnalysis/releases
+
 
 ※Windowsのみ
 
-1. excel-analysis-v1.0.0.zipをダウンロード&解凍
+1. [excel-analysis-v1.0.0.zip](https://github.com/arakaki-asdf/ExcelAnalysis/releases)をダウンロード&解凍
 2. run.batを実行
 3. outputフォルダにjsonが出力されることを確認
 4. run.batのitem.tomlをitem2.tomlに変更
