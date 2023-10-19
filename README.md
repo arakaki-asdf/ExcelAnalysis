@@ -1,6 +1,6 @@
 
-## 機能
-### ExcelからJSON出力 コマンドラインツール
+## ExcelからJSON出力
+コマンドラインツール。
 Excelにパラメータ行を追加し、シート名と同じTOMLファイルを定義してパラメータ毎の型チェックを行い、エラーがなければJSONファイルを出力します。
 
 
@@ -38,10 +38,10 @@ type = "float"
 ## 使用技術
 - C#
 - ライブラリ
-    - ExcelDataReader (excel用)
-    - ExcelDataReader.DataSet (excel用)
-    - Nett (toml用)
-    - Newtonsoft.Json (json用)
+    - ExcelDataReader
+    - ExcelDataReader.DataSet
+    - Nett
+    - Newtonsoft.Json
 
 
 ## 実行方法
